@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, Dimensions, Alert, Button } from 'react-native';
+import { View, Text, StyleSheet, Dimensions, Alert, Button, AppState } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import api from '../api/api';
 import { LineChart } from 'react-native-chart-kit';
@@ -20,17 +20,19 @@ const UserChartsScreen = ({ navigation }) => {
             }
         };
 
-        const mantenerSesion = () => {
-            window.addEventListener('beforeunload', () => {
-                AsyncStorage.removeItem('usuario'); // ✅ Remueve sesión solo al cerrar la pestaña
-            });
+        const manejarEstadoApp = (estado) => {
+            if (estado === 'background') {
+                AsyncStorage.removeItem('usuario'); // ✅ Borra la sesión al mover la app al fondo
+            }
         };
 
         verificarSesion();
-        mantenerSesion();
+
+        // Escucha cambios en el estado de la aplicación
+        const appStateListener = AppState.addEventListener('change', manejarEstadoApp);
 
         return () => {
-            window.removeEventListener('beforeunload', mantenerSesion); // ✅ Limpia el evento al desmontar
+            appStateListener.remove(); // ✅ Limpia el listener al desmontar el componente
         };
     }, [navigation]);
 
@@ -47,7 +49,7 @@ const UserChartsScreen = ({ navigation }) => {
     };
 
     const limpiarDatos = (registros, campo) => {
-        return registros.map((r) => isNaN(r[campo]) || !isFinite(r[campo]) ? 0 : r[campo]);
+        return registros.map((r) => (isNaN(r[campo]) || !isFinite(r[campo]) ? 0 : r[campo]));
     };
 
     const cerrarSesion = async () => {
@@ -70,17 +72,17 @@ const UserChartsScreen = ({ navigation }) => {
                     <LineChart
                         data={{
                             labels: registros.map((_, index) => `Reg ${index + 1}`),
-                            datasets: [{ data: limpiarDatos(registros, 'temp') }]
+                            datasets: [{ data: limpiarDatos(registros, 'temp') }],
                         }}
-                        width={Dimensions.get("window").width - 40}
+                        width={Dimensions.get('window').width - 40}
                         height={220}
                         chartConfig={{
-                            backgroundColor: "#F3FAF8",
-                            backgroundGradientFrom: "#285D56",
-                            backgroundGradientTo: "#55AC9B",
+                            backgroundColor: '#F3FAF8',
+                            backgroundGradientFrom: '#285D56',
+                            backgroundGradientTo: '#55AC9B',
                             color: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`,
-                            labelColor: () => "#F3FAF8",
-                            strokeWidth: 2
+                            labelColor: () => '#F3FAF8',
+                            strokeWidth: 2,
                         }}
                         bezier
                         style={styles.chart}
@@ -90,34 +92,35 @@ const UserChartsScreen = ({ navigation }) => {
                     <LineChart
                         data={{
                             labels: registros.map((_, index) => `Reg ${index + 1}`),
-                            datasets: [{ data: limpiarDatos(registros, 'nivel_agua') }]
+                            datasets: [{ data: limpiarDatos(registros, 'nivel_agua') }],
                         }}
-                        width={Dimensions.get("window").width - 40}
+                        width={Dimensions.get('window').width - 40}
                         height={220}
                         chartConfig={{
-                            backgroundColor: "#F3FAF8",
-                            backgroundGradientFrom: "#285D56",
-                            backgroundGradientTo: "#55AC9B",
+                            backgroundColor: '#F3FAF8',
+                            backgroundGradientFrom: '#285D56',
+                            backgroundGradientTo: '#55AC9B',
                             color: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`,
-                            labelColor: () => "#F3FAF8",
-                            strokeWidth: 2
+                            labelColor: () => '#F3FAF8',
+                            strokeWidth: 2,
                         }}
                         bezier
                         style={styles.chart}
                     />
                 </>
             )}
+            <Button title="Cerrar Sesión" onPress={cerrarSesion} color="#D9534F" />
         </View>
     );
 };
 
 const styles = StyleSheet.create({
-    container: { flex: 1, padding: 20, backgroundColor: "#F3FAF8" },
-    saludo: { fontSize: 20, fontWeight: 'bold', marginBottom: 10, textAlign: 'center', color: "#285D56" },
-    title: { fontSize: 24, fontWeight: 'bold', marginBottom: 20, textAlign: 'center', color: "#285D56" },
-    chartTitle: { fontSize: 18, fontWeight: 'bold', marginTop: 10, textAlign: 'center', color: "#55AC9B" },
+    container: { flex: 1, padding: 20, backgroundColor: '#F3FAF8' },
+    saludo: { fontSize: 20, fontWeight: 'bold', marginBottom: 10, textAlign: 'center', color: '#285D56' },
+    title: { fontSize: 24, fontWeight: 'bold', marginBottom: 20, textAlign: 'center', color: '#285D56' },
+    chartTitle: { fontSize: 18, fontWeight: 'bold', marginTop: 10, textAlign: 'center', color: '#55AC9B' },
     chart: { marginVertical: 10, borderRadius: 10 },
-    info: { textAlign: 'center', fontSize: 18, marginTop: 20, color: "#A4CAC5" },
+    info: { textAlign: 'center', fontSize: 18, marginTop: 20, color: '#A4CAC5' },
 });
 
 export default UserChartsScreen;

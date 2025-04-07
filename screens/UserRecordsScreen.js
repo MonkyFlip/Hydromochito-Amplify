@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, FlatList, Alert, StyleSheet, TouchableOpacity, Button, Animated } from 'react-native';
+import { View, Text, FlatList, Alert, StyleSheet, TouchableOpacity, Button, Animated, AppState } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import api from '../api/api';
 import ModalForm from '../components/ModalForm';
@@ -24,17 +24,19 @@ const UserRecordsScreen = ({ navigation }) => {
             }
         };
 
-        const mantenerSesion = () => {
-            window.addEventListener('beforeunload', () => {
-                AsyncStorage.removeItem('usuario'); // ✅ Remueve sesión solo si se cierra la pestaña
-            });
+        const manejarEstadoApp = (estado) => {
+            if (estado === 'background') {
+                AsyncStorage.removeItem('usuario'); // ✅ Borra la sesión al mover la app al fondo
+            }
         };
 
         verificarSesion();
-        mantenerSesion();
+
+        // Escucha cambios en el estado de la aplicación
+        const appStateListener = AppState.addEventListener('change', manejarEstadoApp);
 
         return () => {
-            window.removeEventListener('beforeunload', mantenerSesion); // ✅ Limpia el evento al desmontar
+            appStateListener.remove(); // ✅ Limpia el listener al desmontar el componente
         };
     }, [pagina, navigation]);
 
@@ -140,7 +142,7 @@ const UserRecordsScreen = ({ navigation }) => {
                             { name: 'temp', placeholder: 'Temperatura' },
                             { name: 'energia', placeholder: 'Fuente de Energía' },
                         ]}
-                        setValues={() => { }}
+                        setValues={() => {}}
                         values={{}}
                     />
                 </Animated.View>
@@ -150,29 +152,27 @@ const UserRecordsScreen = ({ navigation }) => {
 };
 
 const styles = StyleSheet.create({
-    container: { flex: 1, padding: 20, backgroundColor: "#F3FAF8" },
-    saludo: { fontSize: 20, fontWeight: 'bold', marginBottom: 10, textAlign: 'center', color: "#285D56" },
-    title: { fontSize: 24, fontWeight: 'bold', marginBottom: 10, textAlign: 'center', color: "#285D56" },
-    headerRow: { flexDirection: 'row', backgroundColor: "#285D56", padding: 10 },
-    headerCell: { flex: 1, fontWeight: 'bold', textAlign: 'center', color: "#F3FAF8" },
-    row: { flexDirection: 'row', padding: 10, borderBottomWidth: 1, borderBottomColor: "#A4CAC5", alignItems: 'center' },
-    cell: { flex: 1, textAlign: 'center', color: "#285D56" },
+    container: { flex: 1, padding: 20, backgroundColor: '#F3FAF8' },
+    saludo: { fontSize: 20, fontWeight: 'bold', marginBottom: 10, textAlign: 'center', color: '#285D56' },
+    title: { fontSize: 24, fontWeight: 'bold', marginBottom: 10, textAlign: 'center', color: '#285D56' },
+    headerRow: { flexDirection: 'row', backgroundColor: '#285D56', padding: 10 },
+    headerCell: { flex: 1, fontWeight: 'bold', textAlign: 'center', color: '#F3FAF8' },
+    row: { flexDirection: 'row', padding: 10, borderBottomWidth: 1, borderBottomColor: '#A4CAC5', alignItems: 'center' },
+    cell: { flex: 1, textAlign: 'center', color: '#285D56' },
     iconButton: { flex: 1, alignItems: 'center', padding: 5 },
-    info: { textAlign: 'center', fontSize: 18, marginTop: 20, color: "#A4CAC5" },
+    info: { textAlign: 'center', fontSize: 18, marginTop: 20, color: '#A4CAC5' },
     pagination: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 20 },
-    pageText: {
-        fontSize: 16, fontWeight: 'bold', textAlign: 'center', color: "#285D56"},
-        modalContainer: {
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            backgroundColor: 'rgba(0,0,0,0.3)',
-            justifyContent: 'center',
-            alignItems: 'center',
-        },
+    pageText: { fontSize: 16, fontWeight: 'bold', textAlign: 'center', color: '#285D56' },
+    modalContainer: {
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        backgroundColor: 'rgba(0,0,0,0.3)',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
 });
-
 
 export default UserRecordsScreen;

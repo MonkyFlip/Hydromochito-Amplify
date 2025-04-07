@@ -19,11 +19,15 @@ const AdminNavigator = ({ navigation }) => {
         <Tab.Navigator
             screenOptions={{
                 headerRight: () => (
-                    <Button title="Cerrar sesión" onPress={() => cerrarSesion(navigation)} color="red" />
+                    <Button
+                        title="Cerrar sesión"
+                        onPress={() => cerrarSesion(navigation)}
+                        color="#8D6E63" // ✅ Café tierra para el botón de cerrar sesión
+                    />
                 ),
-                tabBarStyle: { backgroundColor: '#007AFF' }, // ✅ Color de fondo más limpio
-                tabBarActiveTintColor: '#fff', // ✅ Color cuando está activo
-                tabBarInactiveTintColor: '#ccc', // ✅ Color cuando está inactivo
+                tabBarStyle: { backgroundColor: '#F8EDE3' }, // ✅ Fondo café claro
+                tabBarActiveTintColor: '#42A5F5', // ✅ Íconos activos en azul brillante
+                tabBarInactiveTintColor: '#8D6E63', // ✅ Íconos inactivos en café tierra
             }}
         >
             <Tab.Screen

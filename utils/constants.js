@@ -1,4 +1,4 @@
-export const API_BASE_URL = 'http://192.168.1.254:3000/api'; // Reemplaza X.X con tu IP local
+export const API_BASE_URL = 'http://192.168.1.111:3000/api';
 
 export const ROLES = {
     ADMIN: 1,

@@ -119,14 +119,77 @@ const IoTRecordsScreen = () => {
 };
 
 const styles = StyleSheet.create({
-    container: { flex: 1, padding: 20, backgroundColor: "#F3FAF8" }, // ✅ Fondo estilizado
-    saludo: { fontSize: 20, fontWeight: 'bold', marginBottom: 10, textAlign: 'center', color: "#285D56" },
-    title: { fontSize: 24, fontWeight: 'bold', marginBottom: 20, textAlign: 'center', color: "#285D56" },
-    headerRow: { flexDirection: 'row', backgroundColor: "#285D56", padding: 10 },
-    headerCell: { flex: 1, fontWeight: 'bold', textAlign: 'center', color: "#F3FAF8" },
-    row: { flexDirection: 'row', padding: 10, borderBottomWidth: 1, borderBottomColor: "#A4CAC5", alignItems: 'center' },
-    cell: { flex: 1, textAlign: 'center', color: "#285D56" },
-    iconButton: { flex: 1, alignItems: 'center' },
+    container: {
+        flex: 1,
+        padding: 20,
+        backgroundColor: "#E3F2FD", // ✅ Azul claro como base del fondo
+    },
+    saludo: {
+        fontSize: 20,
+        fontWeight: 'bold',
+        marginBottom: 10,
+        textAlign: 'center',
+        color: "#1565C0", // ✅ Azul profundo para el texto
+    },
+    title: {
+        fontSize: 24,
+        fontWeight: 'bold',
+        marginBottom: 20,
+        textAlign: 'center',
+        color: "#0D47A1", // ✅ Azul aún más vibrante para destacar el título
+        textShadowColor: "#BBDEFB", // ✅ Sombra ligera en azul claro
+        textShadowOffset: { width: 1, height: 1 },
+        textShadowRadius: 2,
+    },
+    headerRow: {
+        flexDirection: 'row',
+        backgroundColor: "#1976D2", // ✅ Azul fuerte para el encabezado
+        padding: 12,
+        borderRadius: 8, // ✅ Bordes redondeados para suavizar
+        marginBottom: 10,
+    },
+    headerCell: {
+        flex: 1,
+        fontWeight: 'bold',
+        textAlign: 'center',
+        color: "#E3F2FD", // ✅ Texto blanco-azulado para contraste
+    },
+    row: {
+        flexDirection: 'row',
+        padding: 10,
+        borderBottomWidth: 1,
+        borderBottomColor: "#BBDEFB", // ✅ Azul claro como divisor
+        alignItems: 'center',
+        backgroundColor: "#E1F5FE", // ✅ Fondo azul pálido para alternar
+        borderRadius: 6,
+        marginBottom: 5,
+    },
+    cell: {
+        flex: 1,
+        textAlign: 'center',
+        color: "#0D47A1", // ✅ Azul oscuro para las celdas de datos
+    },
+    iconButton: {
+        flex: 1,
+        alignItems: 'center',
+    },
+    addButton: {
+        marginVertical: 10,
+        paddingVertical: 15,
+        backgroundColor: "#64B5F6", // ✅ Botón azul vibrante
+        borderRadius: 8,
+        shadowColor: "#000", // ✅ Sombra para profundidad
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.3,
+        shadowRadius: 4,
+        elevation: 3, // ✅ Elevación en Android
+    },
+    addButtonText: {
+        fontSize: 18,
+        fontWeight: 'bold',
+        textAlign: 'center',
+        color: "#FFFFFF", // ✅ Texto blanco para contraste
+    },
 });
 
 export default IoTRecordsScreen;

@@ -39,3 +39,12 @@ export const deleteRegistroIot = async (id) => {
         return { error: 'No se pudo eliminar el registro' };
     }
 };
+
+export const getUsuarios = async () => {
+    // Example: Fetching users from an API endpoint
+    const response = await fetch('https://your-api-endpoint.com/usuarios');
+    if (!response.ok) {
+        throw new Error('Error fetching users');
+    }
+    return await response.json();
+};

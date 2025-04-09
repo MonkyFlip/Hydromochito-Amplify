@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, FlatList, Alert, StyleSheet, TouchableOpacity, Button, Animated, AppState } from 'react-native';
+import { View, Text, FlatList, Alert, StyleSheet, TouchableOpacity, Animated, AppState } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import api from '../api/api';
 import ModalForm from '../components/ModalForm';
@@ -8,7 +8,7 @@ import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 const UserRecordsScreen = ({ navigation }) => {
     const [registros, setRegistros] = useState([]);
     const [modalVisible, setModalVisible] = useState(false);
-    const [modalOpacity] = useState(new Animated.Value(0)); // ✅ Para la transición del modal
+    const [modalOpacity] = useState(new Animated.Value(0));
     const [usuario, setUsuario] = useState(null);
     const [pagina, setPagina] = useState(1);
 
@@ -17,26 +17,24 @@ const UserRecordsScreen = ({ navigation }) => {
             const datosUsuario = await AsyncStorage.getItem('usuario');
             if (datosUsuario) {
                 const usuarioData = JSON.parse(datosUsuario);
-                setUsuario(usuarioData); // ✅ Mantiene la sesión activa
-                cargarRegistros(usuarioData.id, pagina); // ✅ Carga los registros del usuario
+                setUsuario(usuarioData);
+                cargarRegistros(usuarioData.id, pagina);
             } else {
-                navigation.navigate('Auth'); // ✅ Redirige al login si no hay sesión activa
+                navigation.navigate('Auth');
             }
         };
 
         const manejarEstadoApp = (estado) => {
             if (estado === 'background') {
-                AsyncStorage.removeItem('usuario'); // ✅ Borra la sesión al mover la app al fondo
+                AsyncStorage.removeItem('usuario');
             }
         };
 
         verificarSesion();
-
-        // Escucha cambios en el estado de la aplicación
         const appStateListener = AppState.addEventListener('change', manejarEstadoApp);
 
         return () => {
-            appStateListener.remove(); // ✅ Limpia el listener al desmontar el componente
+            appStateListener.remove();
         };
     }, [pagina, navigation]);
 
@@ -53,32 +51,71 @@ const UserRecordsScreen = ({ navigation }) => {
     };
 
     const toggleModal = (visible) => {
-        setModalVisible(visible); // ✅ Cambia el estado para mostrar/ocultar el modal
+        setModalVisible(visible);
         Animated.timing(modalOpacity, {
             toValue: visible ? 1 : 0,
-            duration: 300, // ✅ Transición del modal
+            duration: 300,
             useNativeDriver: true,
         }).start();
     };
 
     const cerrarSesion = async () => {
-        await AsyncStorage.removeItem('usuario'); // ✅ Elimina la sesión manualmente
+        await AsyncStorage.removeItem('usuario');
         setUsuario(null);
         Alert.alert('Sesión cerrada');
-        navigation.navigate('Auth'); // ✅ Redirige al login
+        navigation.navigate('Auth');
+    };
+
+    const registrarDesdeHydromochito = async () => {
+        try {
+            const usuario = await AsyncStorage.getItem('usuario');
+            if (!usuario) {
+                Alert.alert('Error', 'Debe iniciar sesión para registrar datos.');
+                return;
+            }
+
+            const { id } = JSON.parse(usuario);
+
+            const response = await fetch('http://tu-api-url.com/api/registrar_desde_esp32', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ id_usuario: id }),
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                Alert.alert('Éxito', result.message);
+                cargarRegistros(id, pagina); // Recargar registros después del registro
+            } else {
+                Alert.alert('Error', result.message);
+            }
+        } catch (error) {
+            console.error('Error al registrar desde Hydromochito:', error);
+            Alert.alert('Error', 'Ocurrió un error inesperado.');
+        }
     };
 
     return (
         <View style={styles.container}>
-            {usuario && <Text style={styles.saludo}>Hola, {usuario.nombre}! Bienvenido 👋</Text>}
-            <Text style={styles.title}>Mis Registros IoT</Text>
+            <Text style={styles.title}>Mis Registros de Hydromochito</Text>
 
-            <Button
-                title="Agregar Registro"
-                onPress={() => toggleModal(true)} // ✅ Activa el modal al presionar
-                color="#55AC9B"
-            />
+            {/* Botones alineados */}
+            <View style={styles.buttonsRow}>
+                <TouchableOpacity style={styles.buttonAgregar} onPress={() => toggleModal(true)}>
+                    <Icon name="plus-circle" size={24} color="#FFF" />
+                    <Text style={styles.buttonText}>Agregar Registro</Text>
+                </TouchableOpacity>
 
+                <TouchableOpacity style={styles.buttonHydromochito} onPress={registrarDesdeHydromochito}>
+                    <Icon name="cloud-download" size={24} color="#FFF" />
+                    <Text style={styles.buttonText}>Registrar desde Hydromochito</Text>
+                </TouchableOpacity>
+            </View>
+
+            {/* Tabla de registros */}
             {registros.length === 0 ? (
                 <Text style={styles.info}>No tienes registros aún.</Text>
             ) : (
@@ -105,47 +142,7 @@ const UserRecordsScreen = ({ navigation }) => {
                             </View>
                         )}
                     />
-
-                    {registros.length > 10 && (
-                        <View style={styles.pagination}>
-                            <Button
-                                title="← Anterior"
-                                onPress={() => setPagina((prev) => Math.max(prev - 1, 1))}
-                                disabled={pagina === 1}
-                                color="#285D56"
-                            />
-                            <Text style={styles.pageText}>Página {pagina}</Text>
-                            <Button
-                                title="Siguiente →"
-                                onPress={() => setPagina((prev) => prev + 1)}
-                                color="#285D56"
-                            />
-                        </View>
-                    )}
                 </>
-            )}
-
-            {modalVisible && (
-                <Animated.View style={[styles.modalContainer, { opacity: modalOpacity }]}>
-                    <ModalForm
-                        visible={modalVisible}
-                        onClose={() => toggleModal(false)}
-                        onSubmit={(data) => {
-                            api.post('/registros_iot', { ...data, id_usuario: usuario.id });
-                            cargarRegistros(usuario.id, pagina);
-                            toggleModal(false);
-                        }}
-                        title="Nuevo Registro IoT"
-                        fields={[
-                            { name: 'flujo_agua', placeholder: 'Flujo de Agua' },
-                            { name: 'nivel_agua', placeholder: 'Nivel de Agua' },
-                            { name: 'temp', placeholder: 'Temperatura' },
-                            { name: 'energia', placeholder: 'Fuente de Energía' },
-                        ]}
-                        setValues={() => {}}
-                        values={{}}
-                    />
-                </Animated.View>
             )}
         </View>
     );
@@ -153,26 +150,39 @@ const UserRecordsScreen = ({ navigation }) => {
 
 const styles = StyleSheet.create({
     container: { flex: 1, padding: 20, backgroundColor: '#F3FAF8' },
-    saludo: { fontSize: 20, fontWeight: 'bold', marginBottom: 10, textAlign: 'center', color: '#285D56' },
-    title: { fontSize: 24, fontWeight: 'bold', marginBottom: 10, textAlign: 'center', color: '#285D56' },
+    title: { fontSize: 24, fontWeight: 'bold', marginBottom: 20, textAlign: 'center', color: '#285D56' },
+    buttonsRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 20 },
+    buttonAgregar: {
+        flex: 1,
+        marginRight: 10,
+        flexDirection: 'row',
+        backgroundColor: '#55AC9B',
+        paddingVertical: 10,
+        borderRadius: 10,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    buttonHydromochito: {
+        flex: 1,
+        marginLeft: 10,
+        flexDirection: 'row',
+        backgroundColor: '#285D56',
+        paddingVertical: 10,
+        borderRadius: 10,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    buttonText: {
+        fontSize: 14,
+        fontWeight: 'bold',
+        color: '#FFF',
+        marginLeft: 8,
+    },
     headerRow: { flexDirection: 'row', backgroundColor: '#285D56', padding: 10 },
     headerCell: { flex: 1, fontWeight: 'bold', textAlign: 'center', color: '#F3FAF8' },
     row: { flexDirection: 'row', padding: 10, borderBottomWidth: 1, borderBottomColor: '#A4CAC5', alignItems: 'center' },
     cell: { flex: 1, textAlign: 'center', color: '#285D56' },
-    iconButton: { flex: 1, alignItems: 'center', padding: 5 },
     info: { textAlign: 'center', fontSize: 18, marginTop: 20, color: '#A4CAC5' },
-    pagination: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 20 },
-    pageText: { fontSize: 16, fontWeight: 'bold', textAlign: 'center', color: '#285D56' },
-    modalContainer: {
-        position: 'absolute',
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        backgroundColor: 'rgba(0,0,0,0.3)',
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
 });
 
 export default UserRecordsScreen;

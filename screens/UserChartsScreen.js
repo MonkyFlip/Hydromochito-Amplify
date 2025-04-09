@@ -61,7 +61,6 @@ const UserChartsScreen = ({ navigation }) => {
 
     return (
         <View style={styles.container}>
-            {usuario && <Text style={styles.saludo}>Hola, {usuario.nombre}! 👋</Text>}
             <Text style={styles.title}>Tendencias de Datos IoT</Text>
 
             {registros.length === 0 ? (
@@ -109,7 +108,6 @@ const UserChartsScreen = ({ navigation }) => {
                     />
                 </>
             )}
-            <Button title="Cerrar Sesión" onPress={cerrarSesion} color="#D9534F" />
         </View>
     );
 };

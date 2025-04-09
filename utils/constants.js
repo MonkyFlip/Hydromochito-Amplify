@@ -1,4 +1,4 @@
-export const API_BASE_URL = 'http://192.168.1.111:3000/api';
+export const API_BASE_URL = 'http://3.148.193.165/api';
 
 export const ROLES = {
     ADMIN: 1,

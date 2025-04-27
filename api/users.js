@@ -39,3 +39,25 @@ export const deleteUsuario = async (id) => {
         return { error: 'No se pudo eliminar el usuario' };
     }
 };
+
+export const createUsuario = async (nuevoUsuario) => {
+    try {
+        const response = await api.post('/registros_usuarios', nuevoUsuario);
+        return response.data;
+    } catch (error) {
+        console.error('Error al crear usuario:', error);
+        return { error: 'No se pudo crear el usuario' };
+    }
+};
+
+export const createRegistroIot = async (nuevoRegistro) => {
+    try {
+        console.log('🚀 Enviando datos al servidor:', JSON.stringify(nuevoRegistro, null, 2));
+        const response = await api.post('/registros_iot', nuevoRegistro);
+        console.log('✅ Respuesta recibida:', response.data);
+        return response.data;
+    } catch (error) {
+        console.error('🚨 Error al crear registro:', error);
+        return { error: 'No se pudo crear el registro' };
+    }
+};

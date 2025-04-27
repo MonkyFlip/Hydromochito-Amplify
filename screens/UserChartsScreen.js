@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, Dimensions, Alert, Button, AppState } from 'react-native';
+import { View, Text, StyleSheet, Dimensions, ScrollView, Alert, RefreshControl } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import api from '../api/api';
 import { LineChart } from 'react-native-chart-kit';
@@ -7,6 +7,16 @@ import { LineChart } from 'react-native-chart-kit';
 const UserChartsScreen = ({ navigation }) => {
     const [registros, setRegistros] = useState([]);
     const [usuario, setUsuario] = useState(null);
+    const [refreshing, setRefreshing] = useState(false);
+
+    // Actualización manual al deslizar hacia abajo
+    const onRefresh = async () => {
+        setRefreshing(true);
+        if (usuario) {
+            await cargarRegistros(usuario.id);
+        }
+        setRefreshing(false);
+    };
 
     useEffect(() => {
         const verificarSesion = async () => {
@@ -14,28 +24,16 @@ const UserChartsScreen = ({ navigation }) => {
             if (datosUsuario) {
                 const usuarioData = JSON.parse(datosUsuario);
                 setUsuario(usuarioData);
-                cargarRegistros(usuarioData.id); // ✅ Carga los registros del usuario
+                cargarRegistros(usuarioData.id);
             } else {
-                navigation.navigate('Auth'); // ✅ Redirige al login si no hay sesión activa
-            }
-        };
-
-        const manejarEstadoApp = (estado) => {
-            if (estado === 'background') {
-                AsyncStorage.removeItem('usuario'); // ✅ Borra la sesión al mover la app al fondo
+                navigation.navigate('Auth');
             }
         };
 
         verificarSesion();
-
-        // Escucha cambios en el estado de la aplicación
-        const appStateListener = AppState.addEventListener('change', manejarEstadoApp);
-
-        return () => {
-            appStateListener.remove(); // ✅ Limpia el listener al desmontar el componente
-        };
     }, [navigation]);
 
+    // Obtener registros del usuario
     const cargarRegistros = async (idUsuario) => {
         try {
             const response = await api.get('/registros_iot');
@@ -52,73 +50,124 @@ const UserChartsScreen = ({ navigation }) => {
         return registros.map((r) => (isNaN(r[campo]) || !isFinite(r[campo]) ? 0 : r[campo]));
     };
 
-    const cerrarSesion = async () => {
-        await AsyncStorage.removeItem('usuario'); // ✅ Borra la sesión manualmente
-        setUsuario(null);
-        Alert.alert('Sesión cerrada');
-        navigation.navigate('Auth'); // ✅ Redirige al login
-    };
-
     return (
         <View style={styles.container}>
-            <Text style={styles.title}>Tendencias de Datos IoT</Text>
+            {/* 1️⃣ Título Principal - Estático */}
+            <Text style={styles.title}>Datos Graficados</Text>
 
             {registros.length === 0 ? (
                 <Text style={styles.info}>No hay datos disponibles para mostrar gráficos.</Text>
             ) : (
                 <>
+                    {/* 2️⃣ Título del Gráfico de Temperatura - Estático */}
                     <Text style={styles.chartTitle}>Temperatura</Text>
-                    <LineChart
-                        data={{
-                            labels: registros.map((_, index) => `Reg ${index + 1}`),
-                            datasets: [{ data: limpiarDatos(registros, 'temp') }],
-                        }}
-                        width={Dimensions.get('window').width - 40}
-                        height={220}
-                        chartConfig={{
-                            backgroundColor: '#F3FAF8',
-                            backgroundGradientFrom: '#285D56',
-                            backgroundGradientTo: '#55AC9B',
-                            color: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`,
-                            labelColor: () => '#F3FAF8',
-                            strokeWidth: 2,
-                        }}
-                        bezier
-                        style={styles.chart}
-                    />
 
+                    {/* 3️⃣ Gráfico de Temperatura - Scroll Independiente */}
+                    <ScrollView 
+                        horizontal 
+                        showsHorizontalScrollIndicator={false} 
+                        style={styles.scrollView}
+                        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+                    >
+                        <View style={styles.chartContainer}>
+                            <LineChart
+                                data={{
+                                    labels: registros.map((_, index) => `R${index + 1}`),
+                                    datasets: [{ data: limpiarDatos(registros, 'temp') }],
+                                }}
+                                width={Dimensions.get('window').width * 1.6} // ✅ Aumenta el ancho del gráfico
+                                height={200} // ✅ Aumenta la altura para evitar cortes
+                                chartConfig={{
+                                    backgroundColor: '#F3FAF8',
+                                    backgroundGradientFrom: '#285D56',
+                                    backgroundGradientTo: '#55AC9B',
+                                    color: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`,
+                                    labelColor: () => '#F3FAF8',
+                                    strokeWidth: 3,
+                                    barPercentage: 0.7,
+                                    propsForDots: {
+                                        r: '6', // ✅ Aumenta el tamaño de los puntos
+                                        strokeWidth: '2',
+                                        stroke: '#F3FAF8',
+                                    },
+                                }}
+                                bezier
+                                style={styles.chart}
+                            />
+                        </View>
+                    </ScrollView>
+
+                    {/* 4️⃣ Título del Gráfico de Nivel de Agua - Estático */}
                     <Text style={styles.chartTitle}>Nivel de Agua</Text>
-                    <LineChart
-                        data={{
-                            labels: registros.map((_, index) => `Reg ${index + 1}`),
-                            datasets: [{ data: limpiarDatos(registros, 'nivel_agua') }],
-                        }}
-                        width={Dimensions.get('window').width - 40}
-                        height={220}
-                        chartConfig={{
-                            backgroundColor: '#F3FAF8',
-                            backgroundGradientFrom: '#285D56',
-                            backgroundGradientTo: '#55AC9B',
-                            color: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`,
-                            labelColor: () => '#F3FAF8',
-                            strokeWidth: 2,
-                        }}
-                        bezier
-                        style={styles.chart}
-                    />
+
+                    {/* 5️⃣ Gráfico de Nivel de Agua - Scroll Independiente */}
+                    <ScrollView 
+                        horizontal 
+                        showsHorizontalScrollIndicator={false} 
+                        style={styles.scrollView}
+                        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+                    >
+                        <View style={styles.chartContainer}>
+                            <LineChart
+                                data={{
+                                    labels: registros.map((_, index) => `R${index + 1}`),
+                                    datasets: [{ data: limpiarDatos(registros, 'nivel_agua') }],
+                                }}
+                                width={Dimensions.get('window').width * 1.6} // ✅ Aumenta el ancho del gráfico
+                                height={200} // ✅ Aumenta la altura para evitar cortes
+                                chartConfig={{
+                                    backgroundColor: '#F3FAF8',
+                                    backgroundGradientFrom: '#285D56',
+                                    backgroundGradientTo: '#55AC9B',
+                                    color: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`,
+                                    labelColor: () => '#F3FAF8',
+                                    strokeWidth: 3,
+                                    barPercentage: 0.7,
+                                    propsForDots: {
+                                        r: '6', // ✅ Aumenta el tamaño de los puntos
+                                        strokeWidth: '2',
+                                        stroke: '#F3FAF8',
+                                    },
+                                }}
+                                bezier
+                                style={styles.chart}
+                            />
+                        </View>
+                    </ScrollView>
                 </>
             )}
         </View>
     );
 };
 
+// 🎨 Estilos mejorados
 const styles = StyleSheet.create({
     container: { flex: 1, padding: 20, backgroundColor: '#F3FAF8' },
-    saludo: { fontSize: 20, fontWeight: 'bold', marginBottom: 10, textAlign: 'center', color: '#285D56' },
-    title: { fontSize: 24, fontWeight: 'bold', marginBottom: 20, textAlign: 'center', color: '#285D56' },
-    chartTitle: { fontSize: 18, fontWeight: 'bold', marginTop: 10, textAlign: 'center', color: '#55AC9B' },
-    chart: { marginVertical: 10, borderRadius: 10 },
-    info: { textAlign: 'center', fontSize: 18, marginTop: 20, color: '#A4CAC5' },
+    title: { 
+        fontSize: 26, 
+        fontWeight: 'bold', 
+        textAlign: 'center', 
+        color: '#285D56', 
+        marginBottom: 20, 
+    },
+    chartTitle: { 
+        fontSize: 20, 
+        fontWeight: 'bold', 
+        marginTop: 30, // ✅ Mayor separación entre gráficos
+        textAlign: 'center', 
+        color: '#55AC9B', 
+    },
+    scrollView: { paddingVertical: 15 }, // ✅ Más espacio entre gráficos
+    chartContainer: { flexDirection: 'column', alignItems: 'center', justifyContent: 'center' },
+    chart: { 
+        marginVertical: 15, // ✅ Aumenta el margen para evitar cortes
+        borderRadius: 15, 
+        padding: 10, 
+        shadowColor: '#000', 
+        shadowOpacity: 0.2, 
+        shadowRadius: 5 
+    },
+    info: { textAlign: 'center', fontSize: 18, marginTop: 80, color: '#A4CAC5' },
 });
 
 export default UserChartsScreen;

@@ -22,10 +22,12 @@ export const getRegistroById = async (id) => {
 
 export const createRegistroIot = async (nuevoRegistro) => {
     try {
+        console.log('🚀 Enviando datos al servidor:', JSON.stringify(nuevoRegistro, null, 2));
         const response = await api.post('/registros_iot', nuevoRegistro);
+        console.log('✅ Respuesta recibida:', response.data);
         return response.data;
     } catch (error) {
-        console.error('Error al crear registro IoT:', error);
+        console.error('🚨 Error al crear registro:', error);
         return { error: 'No se pudo crear el registro' };
     }
 };
@@ -42,7 +44,7 @@ export const deleteRegistroIot = async (id) => {
 
 export const getUsuarios = async () => {
     // Example: Fetching users from an API endpoint
-    const response = await fetch('https://your-api-endpoint.com/usuarios');
+    const response = await fetch('http://3.148.193.165/api/registros_usuarios');
     if (!response.ok) {
         throw new Error('Error fetching users');
     }
